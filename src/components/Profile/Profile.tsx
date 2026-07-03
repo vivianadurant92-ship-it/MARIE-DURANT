@@ -19,7 +19,7 @@ function calcTDEE(p: UserProfile): number {
   return Math.round(tdee)
 }
 
-type Section = 'main' | 'edit' | 'apikey'
+type Section = 'main' | 'edit'
 
 export default function Profile({ profile, onProfileUpdate, onReset }: Props) {
   const { t } = useTranslation()
@@ -27,8 +27,6 @@ export default function Profile({ profile, onProfileUpdate, onReset }: Props) {
   const [section, setSection]   = useState<Section>('main')
   const [showReset, setShowReset] = useState(false)
   const [toast, setToast]       = useState('')
-  const [apiKey, setApiKey]     = useState(() => storage.getApiKey())
-  const [apiSaved, setApiSaved] = useState(false)
 
   // Edit draft
   const [editDraft, setEditDraft] = useState({ name: profile.name, weightKg: profile.weightKg, goalWeightKg: profile.goalWeightKg })
@@ -72,38 +70,6 @@ export default function Profile({ profile, onProfileUpdate, onReset }: Props) {
       <button className="btn btn-primary btn-full" style={{ padding: '1rem' }}
         onClick={() => { onProfileUpdate({ ...profile, ...editDraft }); showToast(t('profile_saved')); setSection('main') }}>
         ✓ {t('btn_save')}
-      </button>
-      <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
-    </div>
-  )
-
-  /* ── API Key section ── */
-  if (section === 'apikey') return (
-    <div className="screen" style={{ paddingTop: '1rem' }}>
-      <button className="ob-back" style={{ marginBottom: '1rem' }} onClick={() => setSection('main')}>←</button>
-      <div className="ob-title-block" style={{ marginBottom: '1.5rem' }}>
-        <div className="ob-eyebrow">{t('profile_title')}</div>
-        <h2 className="ob-title">{t('profile_api_key')}</h2>
-      </div>
-
-      <div className="nc-field">
-        <label className="nc-label">{t('profile_api_key')}</label>
-        <input
-          type="password"
-          className="nc-input"
-          value={apiKey}
-          placeholder={t('profile_api_key_placeholder')}
-          onChange={e => { setApiKey(e.target.value); setApiSaved(false) }}
-        />
-      </div>
-      <p style={{ fontSize: '.75rem', color: 'var(--muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-        {t('profile_api_key_hint')}
-      </p>
-      <button
-        className="btn btn-primary btn-full"
-        onClick={() => { storage.saveApiKey(apiKey); setApiSaved(true); showToast(t('profile_api_key_saved')) }}
-      >
-        {apiSaved ? `✓ ${t('profile_api_key_saved')}` : `${t('btn_save')} API Key`}
       </button>
       <div className={`toast${toast ? ' show' : ''}`}>{toast}</div>
     </div>
@@ -220,20 +186,6 @@ export default function Profile({ profile, onProfileUpdate, onReset }: Props) {
             ))}
           </div>
         </div>
-
-        {/* API Key */}
-        <button
-          onClick={() => setSection('apikey')}
-          style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '.7rem 0', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left', borderBottom: '1px solid var(--border)' }}
-        >
-          <div style={{ fontWeight: 700, fontSize: '.9rem' }}>🔑 {t('profile_api_key')}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
-            <span style={{ fontSize: '.75rem', color: storage.getApiKey() ? 'var(--verde)' : 'var(--muted)', fontWeight: 700 }}>
-              {storage.getApiKey() ? '✓ ' + t('profile_api_key_active') : t('profile_api_key_missing')}
-            </span>
-            <span style={{ color: 'var(--muted)', fontSize: '.9rem' }}>→</span>
-          </div>
-        </button>
 
         {/* Reset */}
         <button

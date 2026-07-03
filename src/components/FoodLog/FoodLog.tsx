@@ -2,6 +2,9 @@ import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { FoodEntry } from '../../types'
 import { storage } from '../../hooks/useStorage'
+import { compressImage } from '../../hooks/useClaude'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
 interface Props {
   onClose: () => void
@@ -56,39 +59,27 @@ export default function FoodLog({ onClose }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const apiKey = storage.getApiKey()
-    if (!apiKey) {
-      setErrorMsg(t('foodlog_no_api_key'))
-      setPhase('error')
-      return
-    }
-
     setPreview(URL.createObjectURL(file))
     setPhase('loading')
 
-    const base64 = await new Promise<string>(resolve => {
+    const rawBase64 = await new Promise<string>(resolve => {
       const reader = new FileReader()
       reader.onload = ev => resolve((ev.target?.result as string).split(',')[1])
       reader.readAsDataURL(file)
     })
 
     try {
-      const mediaType = (file.type || 'image/jpeg') as 'image/jpeg' | 'image/png' | 'image/webp'
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const base64 = await compressImage(rawBase64)
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 256,
           messages: [{
             role: 'user',
             content: [
-              { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64 } },
+              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: base64 } },
               {
                 type: 'text',
                 text: 'Identifica el alimento. Devuelve SOLO un objeto JSON sin markdown:\n{"name":"nombre en español","portion":"porción estimada","kcal":número,"protein":número,"carbs":número,"fat":número}\nEstima macros reales para la porción identificada.',

@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next'
 import { ChatMessage, UserProfile } from '../../types'
 import { storage } from '../../hooks/useStorage'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ''
+
 interface Props {
   profile: UserProfile
   onClose: () => void
@@ -73,12 +75,6 @@ export default function Chat({ profile, onClose }: Props) {
     const text = input.trim()
     if (!text || loading) return
 
-    const apiKey = storage.getApiKey()
-    if (!apiKey) {
-      appendCoach(t('chat_no_api_key'))
-      return
-    }
-
     const userMsg: ChatMessage = {
       id: crypto.randomUUID(), role: 'user',
       content: text, timestamp: new Date().toISOString(),
@@ -94,17 +90,12 @@ export default function Chat({ profile, onClose }: Props) {
         content: m.content,
       }))
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model:      'claude-sonnet-4-20250514',
-          max_tokens: 600,
+          max_tokens: 350,
           system:     buildSystemPrompt(profile),
           messages:   apiMsgs,
         }),

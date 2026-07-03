@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { PantryItem, Recipe, UserProfile } from '../types'
-import { storage } from './useStorage'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? ''
 
 type ContentBlock =
   | { type: 'text'; text: string }
@@ -15,22 +16,30 @@ function stripJsonFences(raw: string): string {
   return raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
 }
 
-async function callClaude(messages: ClaudeMessage[], systemPrompt: string): Promise<string> {
-  const apiKey = storage.getApiKey()
-  if (!apiKey) throw new Error('No API key set. Add your Anthropic API key in Profile.')
+export async function compressImage(base64: string, maxDim = 1024, quality = 0.75): Promise<string> {
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height))
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
+      resolve(canvas.toDataURL('image/jpeg', quality).split(',')[1])
+    }
+    img.src = `data:image/jpeg;base64,${base64}`
+  })
+}
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+async function callClaude(messages: ClaudeMessage[], systemPrompt: string, maxTokens = 1500): Promise<string> {
+  const response = await fetch(`${API_BASE}/api/chat`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      // Required for browser-side calls; in production use a backend proxy
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 1500,
+      max_tokens: maxTokens,
       system: systemPrompt,
       messages,
     }),
@@ -139,15 +148,16 @@ export function useClaude() {
     }
   }
 
-  const scanReceipt = async (base64Image: string, lang: string): Promise<PantryItem[]> => {
+  const scanReceipt = async (base64Raw: string, lang: string): Promise<PantryItem[]> => {
     setLoading(true)
     setError(null)
     try {
+      const base64 = await compressImage(base64Raw)
       const system = buildOcrSystemPrompt(lang)
       const ocrContent: ContentBlock[] = [
         {
           type: 'image',
-          source: { type: 'base64', media_type: 'image/jpeg', data: base64Image },
+          source: { type: 'base64', media_type: 'image/jpeg', data: base64 },
         },
         {
           type: 'text',
@@ -156,7 +166,7 @@ export function useClaude() {
             : 'Extract all food items from this supermarket receipt.',
         },
       ]
-      const raw = await callClaude([{ role: 'user', content: ocrContent }], system)
+      const raw = await callClaude([{ role: 'user', content: ocrContent }], system, 256)
       const parsed = JSON.parse(stripJsonFences(raw)) as { items: Omit<PantryItem, 'id' | 'addedAt'>[] }
       return parsed.items.map(i => ({
         ...i,

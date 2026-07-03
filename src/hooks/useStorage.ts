@@ -5,7 +5,6 @@ const KEYS = {
   PANTRY: 'nutricoach:pantry',
   RECIPES: 'nutricoach:recipes',
   LANGUAGE: 'nutricoach:language',
-  API_KEY: 'nutricoach:apikey',
   FOOD_LOG: 'nutricoach:foodlog',
   WEIGHT_LOG: 'nutricoach:weightlog',
   CHAT: 'nutricoach:chat',
@@ -38,9 +37,6 @@ export const storage = {
 
   getLanguage: (): string => localStorage.getItem(KEYS.LANGUAGE) ?? 'es',
   saveLanguage: (lang: string) => localStorage.setItem(KEYS.LANGUAGE, lang),
-
-  getApiKey: (): string => localStorage.getItem(KEYS.API_KEY) ?? '',
-  saveApiKey: (key: string) => localStorage.setItem(KEYS.API_KEY, key),
 
   getFoodLog: (): FoodEntry[] => get<FoodEntry[]>(KEYS.FOOD_LOG) ?? [],
   saveFoodLog: (entries: FoodEntry[]) => set(KEYS.FOOD_LOG, entries),
