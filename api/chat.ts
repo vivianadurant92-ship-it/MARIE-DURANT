@@ -9,7 +9,7 @@ export default async function handler(req: any, res: any) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return res.status(500).json({ error: 'API key not configured on server' })
 
-  const { messages, system, max_tokens = 1500, model = 'claude-sonnet-4-20250514' } = req.body
+  const { messages, system, max_tokens = 1500, model = 'claude-sonnet-5' } = req.body
 
   // Wrap system prompt as a content block to enable prompt caching
   const systemPayload = system
