@@ -8,6 +8,7 @@ const KEYS = {
   FOOD_LOG: 'nutricoach:foodlog',
   WEIGHT_LOG: 'nutricoach:weightlog',
   CHAT: 'nutricoach:chat',
+  SEEN_INTRO: 'nutricoach:seenIntro',
 }
 
 function get<T>(key: string): T | null {
@@ -46,6 +47,9 @@ export const storage = {
 
   getChatHistory: (): ChatMessage[] => get<ChatMessage[]>(KEYS.CHAT) ?? [],
   saveChatHistory: (msgs: ChatMessage[]) => set(KEYS.CHAT, msgs),
+
+  getSeenIntro: (): boolean => localStorage.getItem(KEYS.SEEN_INTRO) === '1',
+  saveSeenIntro: () => localStorage.setItem(KEYS.SEEN_INTRO, '1'),
 
   clearAll: () => Object.values(KEYS).forEach(k => localStorage.removeItem(k)),
 }

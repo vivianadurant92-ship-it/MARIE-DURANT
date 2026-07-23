@@ -66,7 +66,7 @@ interface Props { onComplete: (p: UserProfile) => void }
 
 export default function Onboarding({ onComplete }: Props) {
   const { t } = useTranslation()
-  const [step, setStep] = useState(0)          // 0 = splash, 1-5 = data
+  const [step, setStep] = useState(1)           // 1-5 = data (intro carousel handles the splash)
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE)
   const [heightUnit, setHeightUnit] = useState<'cm' | 'ft'>('cm')
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lbs'>('kg')
@@ -75,7 +75,7 @@ export default function Onboarding({ onComplete }: Props) {
     setProfile(p => ({ ...p, [key]: val }))
 
   const next = () => setStep(s => Math.min(s + 1, TOTAL_STEPS))
-  const back = () => setStep(s => Math.max(s - 1, 0))
+  const back = () => setStep(s => Math.max(s - 1, 1))
 
   const switchLang = () => {
     const nextLang = i18n.language === 'es' ? 'en' : 'es'
@@ -102,48 +102,6 @@ export default function Onboarding({ onComplete }: Props) {
 
   const setDesignGoal = (g: DesignGoal) =>
     set('mainGoal', GOAL_MAP[g] as UserProfile['mainGoal'])
-
-  // ── SPLASH (step 0) ──────────────────────────────
-  if (step === 0) {
-    return (
-      <div className="splash">
-        <button className="lang-toggle-pill" onClick={switchLang}>
-          {t('lang_toggle')}
-        </button>
-
-        <svg className="splash-logo" width="100" height="113" viewBox="0 0 150 170">
-          <defs>
-            <linearGradient id="leafMain" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#F4D6B0" />
-              <stop offset=".5" stopColor="#E8A0AD" />
-              <stop offset="1" stopColor="#D4738A" />
-            </linearGradient>
-          </defs>
-          <path d="M75 8 C32 44 18 84 18 110 a57 57 0 0 0 114 0 C132 84 118 44 75 8 Z" fill="url(#leafMain)" />
-          <path d="M75 30 C75 70 75 120 75 150" fill="none" stroke="rgba(255,255,255,.65)" strokeWidth="3" strokeLinecap="round" />
-          <path d="M75 78 C90 70 102 64 112 56" fill="none" stroke="rgba(255,255,255,.55)" strokeWidth="2.6" strokeLinecap="round" />
-          <path d="M75 100 C60 92 48 86 38 78" fill="none" stroke="rgba(255,255,255,.55)" strokeWidth="2.6" strokeLinecap="round" />
-          <text x="75" y="128" fontFamily="'Cormorant Garamond',serif" fontStyle="italic" fontWeight="600" fontSize="76" fill="#fff" textAnchor="middle">n</text>
-        </svg>
-
-        <div className="splash-text">
-          <div style={{ fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: '2.6rem', lineHeight: 1, letterSpacing: '-0.5px', color: 'var(--dark)', marginBottom: '6px' }}>
-            Nutri<span style={{ fontStyle: 'italic', color: 'var(--rosa)' }}>Coach</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', marginBottom: '14px' }}>
-            <div style={{ width: 44, height: '1.5px', background: 'linear-gradient(90deg,var(--oro-dark),transparent)' }} />
-            <span style={{ fontSize: '11px', letterSpacing: '.46em', textTransform: 'uppercase', color: 'var(--oro-dark)', fontWeight: 700 }}>AI</span>
-            <div style={{ width: 44, height: '1.5px', background: 'linear-gradient(270deg,var(--oro-dark),transparent)' }} />
-          </div>
-          <p className="splash-sub">{t('splash_tagline')}</p>
-        </div>
-
-        <button className="btn-pill btn-pill-primary" onClick={() => setStep(1)}>
-          {t('splash_cta')}
-        </button>
-      </div>
-    )
-  }
 
   // ── DATA STEPS (1-5) ─────────────────────────────
   return (

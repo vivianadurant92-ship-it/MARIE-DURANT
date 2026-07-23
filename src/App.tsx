@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { storage } from './hooks/useStorage'
 import { AppTab, UserProfile } from './types'
+import IntroScreens from './components/Intro/IntroScreens'
 import Onboarding from './components/Onboarding/Onboarding'
 import Home       from './components/Home/Home'
 import Recipes    from './components/Recipes/Recipes'
@@ -13,6 +14,7 @@ import Chat       from './components/Chat/Chat'
 export default function App() {
   const { t } = useTranslation()
   const [profile, setProfile] = useState<UserProfile | null>(() => storage.getProfile())
+  const [showIntro, setShowIntro] = useState(() => !storage.getSeenIntro())
   const [activeTab, setActiveTab] = useState<AppTab>('hoy')
   const [fabOpen,  setFabOpen]  = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
@@ -22,7 +24,15 @@ export default function App() {
     setProfile(p)
   }
 
+  const handleIntroDone = () => {
+    storage.saveSeenIntro()
+    setShowIntro(false)
+  }
+
   if (!profile) {
+    if (showIntro) {
+      return <IntroScreens onDone={handleIntroDone} />
+    }
     return <Onboarding onComplete={handleOnboardingComplete} />
   }
 
